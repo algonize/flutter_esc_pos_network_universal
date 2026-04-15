@@ -2,7 +2,7 @@
 
 A high-performance, cross-platform (IO & Web) Flutter library for printing to ESC/POS thermal network printers (WiFi/Ethernet).
 
-This package is a "universal" rewrite of `flutter_esc_pos_network`, designed to support all Flutter platforms seamlessly, including **Web Support via a specialized Chrome Extension Bridge**.
+This package is a **forked and extended version** of [flutter_esc_pos_network](https://pub.dev/packages/flutter_esc_pos_network), rewritten for "universal" cross-platform support (IO & Web).
 
 ## ✨ Key Features
 
@@ -10,17 +10,21 @@ This package is a "universal" rewrite of `flutter_esc_pos_network`, designed to 
 - 🖼️ **Widget Printing**: Render any Flutter Widget directly to your thermal printer with `printWidget`.
 - 🚀 **Asynchronous Performance**: Uses `compute` (Isolates) for image processing to keep the UI thread smooth.
 - 📏 **Chunked Printing**: Automatically splits long receipts into chunks to prevent buffer overflow and ensure smooth web printing.
-- 🌐 **Web Bridge**: Native TCP support on Web via the [Local TCP Extension](https://chromewebstore.google.com/detail/local-tcp/bjmaihdjjkbjdjjbjbjbjbjbjbjbjbjb).
+- 🌐 **Web Bridge**: Native TCP support on Web via the [Local TCP Extension](https://chromewebstore.google.com/detail/local-tcp/ngbakchodnmhndnghhejmocfadjfekkf).
 - 🔄 **Real-time Status**: Broadcast stream for monitoring the availability of the web printing bridge.
 - 📏 **Custom Paper Sizes**: Robust support for 58mm, 72mm, and 80mm paper widths.
 
 ## 🔗 Official Resources
 
-- **GitHub Repository**: [Download Source & Scripts](https://github.com/algonize/local_tcp/archive/refs/heads/main.zip)
-- **Chrome Web Store**: [Local TCP Extension](https://chromewebstore.google.com/detail/local-tcp/bjmaihdjjkbjdjjbjbjbjbjbjbjbjbjb)
+- **GitHub Repository**: [Source Code](https://github.com/algonize/local_tcp)
+- **GitHub Download Link**: [Download Source & Scripts](https://github.com/algonize/local_tcp/archive/refs/heads/main.zip)
+- **Chrome Web Store**: [Local TCP Extension](https://chromewebstore.google.com/detail/local-tcp/ngbakchodnmhndnghhejmocfadjfekkf)
 - **Video Tutorial**: [Setup Guide & Demo](https://www.youtube.com/watch?v=D0Zdp7xysy8)
 
 ## 🚀 Getting Started
+
+> [!TIP]
+> **For proper installation and implementation details, please check the [example](example) folder very well.**
 
 ### 1. Unified Interface Usage
 
@@ -74,4 +78,4 @@ final printer = PrinterNetworkManager(
 We welcome community contributions! Please report bugs, suggest features, or submit PRs to help improve the universal printing experience.
 
 ---
-Built with ❤️ by Algoramming
+Built with ❤️ by Algoramming Systems Ltd.

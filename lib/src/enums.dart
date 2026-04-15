@@ -16,14 +16,6 @@ enum PosPrintResult {
   final String msg;
 }
 
-enum LocalTcpExtensionStatus {
-  checking,
-  notInstalled,
-  bridgeNotLinked,
-  ready,
-  notWeb,
-}
-
 enum ThermalPosPrinterPageSize {
   size58mm('58mm'),
   size72mm('72mm'),
@@ -71,12 +63,4 @@ extension ThermalPosPrinterPageSizeExt on ThermalPosPrinterPageSize {
         return PaperSize.mm80;
     }
   }
-}
-
-extension LocalTcpExtensionStatusX on LocalTcpExtensionStatus {
-  bool get isChecking => this == LocalTcpExtensionStatus.checking;
-  bool get isNotInstalled => this == LocalTcpExtensionStatus.notInstalled;
-  bool get isBridgeNotLinked => this == LocalTcpExtensionStatus.bridgeNotLinked;
-  bool get isReady => this == LocalTcpExtensionStatus.ready;
-  bool get isNotWeb => this == LocalTcpExtensionStatus.notWeb;
 }
