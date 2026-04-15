@@ -1,7 +1,9 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'dart:async';
 import 'dart:io';
-import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_esc_pos_utils/flutter_esc_pos_utils.dart';
 import 'package:image/image.dart' as img;
@@ -14,6 +16,10 @@ class PrinterNetworkManagerIO implements BasePrinterNetworkManager {
   final String _host;
   final int _port;
   final Duration _timeout;
+  final ThermalPosPrinterPageSize _paperSize;
+  final int _chunkHeight;
+  CapabilityProfile? _profile;
+
   Socket? _socket;
   bool _isConnected = false;
   bool _isPrinting = false;
@@ -22,12 +28,27 @@ class PrinterNetworkManagerIO implements BasePrinterNetworkManager {
     String host, {
     int port = 9100,
     Duration timeout = const Duration(seconds: 5),
+    ThermalPosPrinterPageSize paperSize = ThermalPosPrinterPageSize.size80mm,
+    CapabilityProfile? profile,
+    int chunkHeight = 100,
   })  : _host = host,
         _port = port,
-        _timeout = timeout;
+        _timeout = timeout,
+        _paperSize = paperSize,
+        _profile = profile,
+        _chunkHeight = chunkHeight;
 
   @override
   bool get isConnected => _isConnected;
+
+  @override
+  ThermalPosPrinterPageSize get paperSize => _paperSize;
+
+  @override
+  CapabilityProfile? get profile => _profile;
+
+  @override
+  int get chunkHeight => _chunkHeight;
 
   @override
   Future<PosPrintResult> connect({Duration? timeout}) async {
@@ -38,6 +59,7 @@ class PrinterNetworkManagerIO implements BasePrinterNetworkManager {
     try {
       _socket = await Socket.connect(_host, _port, timeout: timeout ?? _timeout);
       _isConnected = true;
+      _profile ??= await CapabilityProfile.load();
       return PosPrintResult.success;
     } on SocketException catch (e) {
       _isConnected = false;
@@ -97,12 +119,20 @@ class PrinterNetworkManagerIO implements BasePrinterNetworkManager {
   }
 
   @override
-  Future<PosPrintResult> printWidget(BuildContext context, {required Widget child, bool isDisconnect = true}) async {
+  Future<PosPrintResult> printWidget(BuildContext context,
+      {required Widget child, bool isDisconnect = true}) async {
     if (_isPrinting) {
       return PosPrintResult.printInProgress;
     }
 
     try {
+      if (_profile == null) {
+        final connectResult = await connect();
+        if (connectResult != PosPrintResult.success) {
+          return connectResult;
+        }
+      }
+
       final ScreenshotController screenshotController = ScreenshotController();
 
       final Uint8List imageBytes = await screenshotController.captureFromLongWidget(
@@ -111,18 +141,38 @@ class PrinterNetworkManagerIO implements BasePrinterNetworkManager {
         context: context,
       );
 
-      final img.Image? baseImage = img.decodeImage(imageBytes);
-      if (baseImage == null) return PosPrintResult.ticketEmpty;
+      final List<int> bytes = await compute(_generateEscPosBytes, {
+        'imageBytes': imageBytes,
+        'paperSize': _paperSize,
+        'profile': _profile!,
+        'chunkHeight': _chunkHeight,
+      });
 
-      final profile = await CapabilityProfile.load();
-      final generator = Generator(PaperSize.mm80, profile);
+      if (bytes.isEmpty) return PosPrintResult.ticketEmpty;
+
+      return await printTicket(bytes, isDisconnect: isDisconnect);
+    } catch (e) {
+      return PosPrintResult.ticketEmpty;
+    }
+  }
+
+  static List<int> _generateEscPosBytes(Map<String, dynamic> params) {
+    try {
+      final Uint8List imageBytes = params['imageBytes'];
+      final ThermalPosPrinterPageSize paperSize = params['paperSize'];
+      final CapabilityProfile profile = params['profile'];
+      final int chunkHeight = params['chunkHeight'];
+
+      final img.Image? baseImage = img.decodeImage(imageBytes);
+      if (baseImage == null) return [];
+
+      final generator = Generator(paperSize.toPaperSize, profile);
       List<int> bytes = [];
 
-      const int chunkHeight = 250;
       int yOffset = 0;
-
       while (yOffset < baseImage.height) {
-        int h = (yOffset + chunkHeight > baseImage.height) ? baseImage.height - yOffset : chunkHeight;
+        int h =
+            (yOffset + chunkHeight > baseImage.height) ? baseImage.height - yOffset : chunkHeight;
 
         final img.Image cropped = img.copyCrop(
           baseImage,
@@ -139,9 +189,9 @@ class PrinterNetworkManagerIO implements BasePrinterNetworkManager {
       bytes.addAll(generator.feed(2));
       bytes.addAll(generator.cut());
 
-      return await printTicket(bytes, isDisconnect: isDisconnect);
+      return bytes;
     } catch (e) {
-      return PosPrintResult.ticketEmpty;
+      return [];
     }
   }
 
@@ -174,5 +224,19 @@ class PrinterNetworkManagerIO implements BasePrinterNetworkManager {
   }
 }
 
-BasePrinterNetworkManager createPrinterManager(String host, int port, Duration timeout) =>
-    PrinterNetworkManagerIO(host, port: port, timeout: timeout);
+BasePrinterNetworkManager createPrinterManager(
+  String host,
+  int port,
+  Duration timeout,
+  ThermalPosPrinterPageSize paperSize,
+  CapabilityProfile? profile,
+  int chunkHeight,
+) =>
+    PrinterNetworkManagerIO(
+      host,
+      port: port,
+      timeout: timeout,
+      paperSize: paperSize,
+      profile: profile,
+      chunkHeight: chunkHeight,
+    );

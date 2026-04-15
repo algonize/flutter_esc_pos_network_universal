@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_esc_pos_network_universal/flutter_esc_pos_network_universal.dart';
-import 'package:flutter_esc_pos_utils/flutter_esc_pos_utils.dart';
 
 class NetworkPrinter {
   Future<List<int>> testTicket() async {
@@ -80,7 +79,7 @@ class NetworkPrinter {
     final printer = PrinterNetworkManager('192.168.10.199');
     final result = await printer.printWidget(
       context,
-      child: _TestReciptWidget(pageSize: ThermalPosPrinterPageSize.size80mm),
+      child: _TestReciptWidget(pageSize: PaperSize.mm80),
     );
     if (result != PosPrintResult.success) {
       debugPrint(result.msg);
@@ -91,16 +90,16 @@ class NetworkPrinter {
 class _TestReciptWidget extends StatelessWidget {
   const _TestReciptWidget({required this.pageSize});
 
-  final ThermalPosPrinterPageSize pageSize;
+  final PaperSize pageSize;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       color: Colors.white,
-      width: pageSize.widthPx,
+      width: pageSize.width.toDouble(),
       child: Column(
         children: [
-          Text('Thermal POS Printer Test Receipt - ${pageSize.title}'),
+          Text('Thermal POS Printer Test Receipt - ${pageSize.value}'),
           const SizedBox(height: 10),
           const Text(
             'This is a test receipt to demonstrate the capabilities of the thermal POS printer.',

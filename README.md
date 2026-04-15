@@ -1,76 +1,77 @@
-# flutter_esc_pos_network_universal
+# Flutter ESC/POS Network Universal
 
-The library allows to print receipts using an ESC/POS thermal WiFi/Ethernet printer. For Bluetooth printers, use [esc_pos_bluetooth](https://github.com/andrey-ushakov/esc_pos_bluetooth) library.
+A high-performance, cross-platform (IO & Web) Flutter library for printing to ESC/POS thermal network printers (WiFi/Ethernet).
 
-It can be used in [Flutter](https://flutter.dev/) or pure [Dart](https://dart.dev/) projects. For Flutter projects, both Android, iOS, windows, Linux and MacOS are supported.
+This package is a "universal" rewrite of `flutter_esc_pos_network`, designed to support all Flutter platforms seamlessly, including **Web Support via a specialized Chrome Extension Bridge**.
 
-To scan for printers in your network, consider using [ping_discover_network](https://pub.dev/packages/ping_discover_network) package. Note that most of the ESC/POS printers by default listen on port 9100.
+## ✨ Key Features
 
-## TODO (PRs are welcomed!)
+- 📱 **Cross-Platform**: Unified API for Android, iOS, Windows, macOS, Linux, and Web.
+- 🖼️ **Widget Printing**: Render any Flutter Widget directly to your thermal printer with `printWidget`.
+- 🚀 **Asynchronous Performance**: Uses `compute` (Isolates) for image processing to keep the UI thread smooth.
+- 📏 **Chunked Printing**: Automatically splits long receipts into chunks to prevent buffer overflow and ensure smooth web printing.
+- 🌐 **Web Bridge**: Native TCP support on Web via the [Local TCP Extension](https://chromewebstore.google.com/detail/local-tcp/bjmaihdjjkbjdjjbjbjbjbjbjbjbjbjb).
+- 🔄 **Real-time Status**: Broadcast stream for monitoring the availability of the web printing bridge.
+- 📏 **Custom Paper Sizes**: Robust support for 58mm, 72mm, and 80mm paper widths.
 
-- Print QR Codes using the `GS ( k` command (printing QR code from an image already supported)
-- PDF-417 Barcodes using the `GS ( k` command
-- Line spacing using the `ESC 3 <n>` command
+## 🔗 Official Resources
 
-## How to Help
+- **GitHub Repository**: [Download Source & Scripts](https://github.com/algonize/local_tcp/archive/refs/heads/main.zip)
+- **Chrome Web Store**: [Local TCP Extension](https://chromewebstore.google.com/detail/local-tcp/bjmaihdjjkbjdjjbjbjbjbjbjbjbjbjb)
+- **Video Tutorial**: [Setup Guide & Demo](https://www.youtube.com/watch?v=D0Zdp7xysy8)
 
-- Test your printer and add it in the table: [Wifi/Network printer](https://github.com/mjafartp/flutter_esc_pos_network/blob/master/printers.md) or [Bluetooth printer](https://github.com/andrey-ushakov/esc_pos_bluetooth/blob/master/printers.md)
-- Test and report bugs
-- Share your ideas about what could be improved (code optimization, new features...)
-- PRs are welcomed!
+## 🚀 Getting Started
 
-## Tested Printers
-
-Here are some [printers tested with this library](printers.md). Please add the models you have tested to maintain and improve this library and help others to choose the right printer.
-
-## Generate a Receipt
-
-### Simple Receipt with Styles:
+### 1. Unified Interface Usage
 
 ```dart
-void testReceipt(NetworkPrinter printer) {
-  printer.text(
-        'Regular: aA bB cC dD eE fF gG hH iI jJ kK lL mM nN oO pP qQ rR sS tT uU vV wW xX yY zZ');
-  printer.text('Special 1: àÀ èÈ éÉ ûÛ üÜ çÇ ôÔ',
-      styles: PosStyles(codeTable: 'CP1252'));
-  printer.text('Special 2: blåbærgrød',
-      styles: PosStyles(codeTable: 'CP1252'));
+import 'package:flutter_esc_pos_network_universal/flutter_esc_pos_network_universal.dart';
 
-  printer.text('Bold text', styles: PosStyles(bold: true));
-  printer.text('Reverse text', styles: PosStyles(reverse: true));
-  printer.text('Underlined text',
-      styles: PosStyles(underline: true), linesAfter: 1);
-  printer.text('Align left', styles: PosStyles(align: PosAlign.left));
-  printer.text('Align center', styles: PosStyles(align: PosAlign.center));
-  printer.text('Align right',
-      styles: PosStyles(align: PosAlign.right), linesAfter: 1);
+final printer = PrinterNetworkManager(
+  '192.168.1.100',
+  paperSize: ThermalPosPrinterPageSize.size80mm,
+);
 
-  printer.text('Text size 200%',
-      styles: PosStyles(
-        height: PosTextSize.size2,
-        width: PosTextSize.size2,
-      ));
-
-  printer.feed(2);
-  printer.cut();
+PosPrintResult connect = await printer.connect();
+if (connect == PosPrintResult.success) {
+  // Print standard ESC/POS bytes
+  await printer.printTicket(ticketBytes);
+  
+  printer.disconnect();
 }
 ```
 
-You can find more examples here: [flutter_esc_pos_utils](https://github.com/mjafartp/flutter_esc_pos_utils).
-
-## Print a Receipt
+### 2. Printing a Flutter Widget
 
 ```dart
-import 'package:flutter_esc_pos_network/flutter_esc_pos_network.dart';
-final printer = PrinterNetworkManager('192.168.1.100');
-    PosPrintResult connect = await printer.connect();
-    if (connect == PosPrintResult.success) {
-      PosPrintResult printing = await printer.printTicket(ticket);
-
-      print(printing.msg);
-      printer.disconnect();
-    }
-  }
+await printer.printWidget(
+  context,
+  child: MyReceiptWidget(), // Any standard Flutter widget
+);
 ```
 
-For a complete example, check `example/example.dart`
+## 🌐 Web Architecture (The Bridge)
+
+Since standard web browsers cannot directly open TCP sockets, this package uses a **Native Messaging Bridge**:
+
+1. **Extension**: The [Local TCP Chrome Extension](https://chromewebstore.google.com/detail/local-tcp/bjmaihdjjkbjdjjbjbjbjbjbjbjbjbjb) acts as the bridge.
+2. **Native Host**: A small setup script (available on [GitHub](https://github.com/algonize/local_tcp/archive/refs/heads/main.zip)) runs on the user's computer to handle the actual TCP sockets.
+3. **Seamless API**: The package automatically detects the platform and routes commands through the extension if running on Web, providing a single, unified development experience.
+
+## 🛠️ Performance Configuration
+
+You can tune the `chunkHeight` to balance printing speed vs. memory usage. The default is `100` pixels, which is optimized for smooth web printing.
+
+```dart
+final printer = PrinterNetworkManager(
+  host,
+  chunkHeight: 100, // Balanced for Web stability
+);
+```
+
+## 🤝 Support & PRs
+
+We welcome community contributions! Please report bugs, suggest features, or submit PRs to help improve the universal printing experience.
+
+---
+Built with ❤️ by Algoramming

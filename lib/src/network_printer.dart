@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_esc_pos_utils/flutter_esc_pos_utils.dart';
 
 import 'enums.dart';
 import 'network_printer_interface.dart';
@@ -13,10 +14,29 @@ class PrinterNetworkManager implements BasePrinterNetworkManager {
     String host, {
     int port = 9100,
     Duration timeout = const Duration(seconds: 5),
-  }) : _delegate = platform.createPrinterManager(host, port, timeout);
+    ThermalPosPrinterPageSize paperSize = ThermalPosPrinterPageSize.size80mm,
+    CapabilityProfile? profile,
+    int chunkHeight = 100,
+  }) : _delegate = platform.createPrinterManager(
+          host,
+          port,
+          timeout,
+          paperSize,
+          profile,
+          chunkHeight,
+        );
 
   @override
   bool get isConnected => _delegate.isConnected;
+
+  @override
+  ThermalPosPrinterPageSize get paperSize => _delegate.paperSize;
+
+  @override
+  CapabilityProfile? get profile => _delegate.profile;
+
+  @override
+  int get chunkHeight => _delegate.chunkHeight;
 
   @override
   Future<PosPrintResult> connect({Duration? timeout}) => _delegate.connect(timeout: timeout);

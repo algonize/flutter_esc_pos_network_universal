@@ -1,11 +1,13 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
+import 'package:flutter_esc_pos_utils/flutter_esc_pos_utils.dart';
 
 import 'enums.dart';
 
 abstract class BasePrinterNetworkManager {
   bool get isConnected;
+  ThermalPosPrinterPageSize get paperSize;
+  CapabilityProfile? get profile;
+  int get chunkHeight;
 
   Future<PosPrintResult> connect({Duration? timeout});
   Future<PosPrintResult> disconnect({Duration? timeout});

@@ -1,3 +1,5 @@
+// ignore_for_file: use_build_context_synchronously
+
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -14,6 +16,10 @@ class PrinterNetworkManagerWeb implements BasePrinterNetworkManager {
   final String _host;
   final int _port;
   final Duration _timeout;
+  final ThermalPosPrinterPageSize _paperSize;
+  final int _chunkHeight;
+  CapabilityProfile? _profile;
+
   bool _isConnected = false;
   bool _isPrinting = false;
 
@@ -24,9 +30,15 @@ class PrinterNetworkManagerWeb implements BasePrinterNetworkManager {
     String host, {
     int port = 9100,
     Duration timeout = const Duration(seconds: 5),
-  }) : _host = host,
-       _port = port,
-       _timeout = timeout {
+    ThermalPosPrinterPageSize paperSize = ThermalPosPrinterPageSize.size80mm,
+    CapabilityProfile? profile,
+    int chunkHeight = 100,
+  })  : _host = host,
+        _port = port,
+        _timeout = timeout,
+        _paperSize = paperSize,
+        _profile = profile,
+        _chunkHeight = chunkHeight {
     _initListener();
   }
 
@@ -43,6 +55,18 @@ class PrinterNetworkManagerWeb implements BasePrinterNetworkManager {
       }
     });
   }
+
+  @override
+  bool get isConnected => _isConnected;
+
+  @override
+  ThermalPosPrinterPageSize get paperSize => _paperSize;
+
+  @override
+  CapabilityProfile? get profile => _profile;
+
+  @override
+  int get chunkHeight => _chunkHeight;
 
   Future<Map<String, dynamic>> _sendMessage(String action, {List<int>? data}) async {
     final messageId = const Uuid().v4();
@@ -69,13 +93,11 @@ class PrinterNetworkManagerWeb implements BasePrinterNetworkManager {
   }
 
   @override
-  bool get isConnected => _isConnected;
-
-  @override
   Future<PosPrintResult> connect({Duration? timeout}) async {
     final res = await _sendMessage('CONNECT');
     if (res['success'] == true) {
       _isConnected = true;
+      _profile ??= await CapabilityProfile.load();
       return PosPrintResult.success;
     }
     return PosPrintResult.socketError;
@@ -111,10 +133,18 @@ class PrinterNetworkManagerWeb implements BasePrinterNetworkManager {
   }
 
   @override
-  Future<PosPrintResult> printWidget(BuildContext context, {required Widget child, bool isDisconnect = true}) async {
+  Future<PosPrintResult> printWidget(BuildContext context,
+      {required Widget child, bool isDisconnect = true}) async {
     if (_isPrinting) return PosPrintResult.printInProgress;
 
     try {
+      if (_profile == null) {
+        final connectResult = await connect();
+        if (connectResult != PosPrintResult.success) {
+          return connectResult;
+        }
+      }
+
       final ScreenshotController screenshotController = ScreenshotController();
       final imageBytes = await screenshotController.captureFromLongWidget(
         InheritedTheme.captureAll(context, Material(color: Colors.white, child: child)),
@@ -125,16 +155,16 @@ class PrinterNetworkManagerWeb implements BasePrinterNetworkManager {
       final img.Image? baseImage = img.decodeImage(imageBytes);
       if (baseImage == null) return PosPrintResult.ticketEmpty;
 
-      final profile = await CapabilityProfile.load();
-      final generator = Generator(PaperSize.mm80, profile);
+      final generator = Generator(_paperSize.toPaperSize, _profile!);
       List<int> bytes = [];
 
-      const int chunkHeight = 250;
       int yOffset = 0;
 
       while (yOffset < baseImage.height) {
-        int h = (yOffset + chunkHeight > baseImage.height) ? baseImage.height - yOffset : chunkHeight;
-        final img.Image cropped = img.copyCrop(baseImage, x: 0, y: yOffset, width: baseImage.width, height: h);
+        int h =
+            (yOffset + _chunkHeight > baseImage.height) ? baseImage.height - yOffset : _chunkHeight;
+        final img.Image cropped =
+            img.copyCrop(baseImage, x: 0, y: yOffset, width: baseImage.width, height: h);
         bytes.addAll(generator.image(cropped));
         yOffset += h;
       }
@@ -153,5 +183,19 @@ class PrinterNetworkManagerWeb implements BasePrinterNetworkManager {
   }
 }
 
-BasePrinterNetworkManager createPrinterManager(String host, int port, Duration timeout) =>
-    PrinterNetworkManagerWeb(host, port: port, timeout: timeout);
+BasePrinterNetworkManager createPrinterManager(
+  String host,
+  int port,
+  Duration timeout,
+  ThermalPosPrinterPageSize paperSize,
+  CapabilityProfile? profile,
+  int chunkHeight,
+) =>
+    PrinterNetworkManagerWeb(
+      host,
+      port: port,
+      timeout: timeout,
+      paperSize: paperSize,
+      profile: profile,
+      chunkHeight: chunkHeight,
+    );
