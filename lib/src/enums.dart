@@ -35,3 +35,40 @@ class PosPrintResult {
     }
   }
 }
+
+enum ThermalPosPrinterPageSize {
+  size58mm('58mm'),
+  size72mm('72mm'),
+  size80mm('80mm');
+
+  const ThermalPosPrinterPageSize(this.title);
+  final String title;
+}
+
+extension ThermalPosPrinterPageSizeStringExt on String {
+  ThermalPosPrinterPageSize get toThermalPosPrinterPageSize {
+    switch (this) {
+      case '58mm':
+        return ThermalPosPrinterPageSize.size58mm;
+      case '72mm':
+        return ThermalPosPrinterPageSize.size72mm;
+      case '80mm':
+        return ThermalPosPrinterPageSize.size80mm;
+      default:
+        return ThermalPosPrinterPageSize.size58mm;
+    }
+  }
+}
+
+extension ThermalPosPrinterPageSizeExt on ThermalPosPrinterPageSize {
+  double get widthPx {
+    switch (this) {
+      case ThermalPosPrinterPageSize.size58mm:
+        return 384.0;
+      case ThermalPosPrinterPageSize.size72mm:
+        return 512.0;
+      case ThermalPosPrinterPageSize.size80mm:
+        return 576.0;
+    }
+  }
+}
