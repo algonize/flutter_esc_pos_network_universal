@@ -49,7 +49,8 @@ class PrinterNetworkManagerWeb implements BasePrinterNetworkManager {
         final messageId = data['messageId'];
         final response = data['response'];
         if (messageId != null && _pendingRequests.containsKey(messageId)) {
-          _pendingRequests[messageId]!.complete(Map<String, dynamic>.from(response));
+          _pendingRequests[messageId]!
+              .complete(Map<String, dynamic>.from(response));
           _pendingRequests.remove(messageId);
         }
       }
@@ -68,7 +69,8 @@ class PrinterNetworkManagerWeb implements BasePrinterNetworkManager {
   @override
   int get chunkHeight => _chunkHeight;
 
-  Future<Map<String, dynamic>> _sendMessage(String action, {List<int>? data}) async {
+  Future<Map<String, dynamic>> _sendMessage(String action,
+      {List<int>? data}) async {
     final messageId = const Uuid().v4();
     final completer = Completer<Map<String, dynamic>>();
     _pendingRequests[messageId] = completer;
@@ -111,7 +113,8 @@ class PrinterNetworkManagerWeb implements BasePrinterNetworkManager {
   }
 
   @override
-  Future<PosPrintResult> printTicket(List<int> data, {bool isDisconnect = true}) async {
+  Future<PosPrintResult> printTicket(List<int> data,
+      {bool isDisconnect = true}) async {
     if (_isPrinting) return PosPrintResult.printInProgress;
     if (data.isEmpty) return PosPrintResult.ticketEmpty;
 
@@ -147,7 +150,8 @@ class PrinterNetworkManagerWeb implements BasePrinterNetworkManager {
 
       final ScreenshotController screenshotController = ScreenshotController();
       final imageBytes = await screenshotController.captureFromLongWidget(
-        InheritedTheme.captureAll(context, Material(color: Colors.white, child: child)),
+        InheritedTheme.captureAll(
+            context, Material(color: Colors.white, child: child)),
         delay: const Duration(milliseconds: 200),
         context: context,
       );
@@ -161,10 +165,11 @@ class PrinterNetworkManagerWeb implements BasePrinterNetworkManager {
       int yOffset = 0;
 
       while (yOffset < baseImage.height) {
-        int h =
-            (yOffset + _chunkHeight > baseImage.height) ? baseImage.height - yOffset : _chunkHeight;
-        final img.Image cropped =
-            img.copyCrop(baseImage, x: 0, y: yOffset, width: baseImage.width, height: h);
+        int h = (yOffset + _chunkHeight > baseImage.height)
+            ? baseImage.height - yOffset
+            : _chunkHeight;
+        final img.Image cropped = img.copyCrop(baseImage,
+            x: 0, y: yOffset, width: baseImage.width, height: h);
         bytes.addAll(generator.image(cropped));
         yOffset += h;
       }

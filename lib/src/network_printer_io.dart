@@ -57,7 +57,8 @@ class PrinterNetworkManagerIO implements BasePrinterNetworkManager {
     }
 
     try {
-      _socket = await Socket.connect(_host, _port, timeout: timeout ?? _timeout);
+      _socket =
+          await Socket.connect(_host, _port, timeout: timeout ?? _timeout);
       _isConnected = true;
       _profile ??= await CapabilityProfile.load();
       return PosPrintResult.success;
@@ -76,7 +77,8 @@ class PrinterNetworkManagerIO implements BasePrinterNetworkManager {
   }
 
   @override
-  Future<PosPrintResult> printTicket(List<int> data, {bool isDisconnect = true}) async {
+  Future<PosPrintResult> printTicket(List<int> data,
+      {bool isDisconnect = true}) async {
     if (_isPrinting) {
       return PosPrintResult.printInProgress;
     }
@@ -135,8 +137,10 @@ class PrinterNetworkManagerIO implements BasePrinterNetworkManager {
 
       final ScreenshotController screenshotController = ScreenshotController();
 
-      final Uint8List imageBytes = await screenshotController.captureFromLongWidget(
-        InheritedTheme.captureAll(context, Material(color: Colors.white, child: child)),
+      final Uint8List imageBytes =
+          await screenshotController.captureFromLongWidget(
+        InheritedTheme.captureAll(
+            context, Material(color: Colors.white, child: child)),
         delay: const Duration(milliseconds: 200),
         context: context,
       );
@@ -171,8 +175,9 @@ class PrinterNetworkManagerIO implements BasePrinterNetworkManager {
 
       int yOffset = 0;
       while (yOffset < baseImage.height) {
-        int h =
-            (yOffset + chunkHeight > baseImage.height) ? baseImage.height - yOffset : chunkHeight;
+        int h = (yOffset + chunkHeight > baseImage.height)
+            ? baseImage.height - yOffset
+            : chunkHeight;
 
         final img.Image cropped = img.copyCrop(
           baseImage,

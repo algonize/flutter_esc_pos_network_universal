@@ -38,11 +38,15 @@ class LocalTcpExtensionNotifier extends Notifier<LocalTcpExtensionStatus> {
     _subscription = html.window.onMessage.listen((event) {
       try {
         final data = event.data;
-        if (data is Map && data['source'] == 'localtcp_res' && data['messageId'] == messageId) {
+        if (data is Map &&
+            data['source'] == 'localtcp_res' &&
+            data['messageId'] == messageId) {
           final response = data['response'];
           if (response is Map && response['success'] == true) {
             if (response['connected'] == true) {
-              if (!completer.isCompleted) completer.complete(LocalTcpExtensionStatus.ready);
+              if (!completer.isCompleted) {
+                completer.complete(LocalTcpExtensionStatus.ready);
+              }
             } else {
               if (!completer.isCompleted) {
                 completer.complete(LocalTcpExtensionStatus.bridgeNotLinked);
@@ -56,7 +60,11 @@ class LocalTcpExtensionNotifier extends Notifier<LocalTcpExtensionStatus> {
     });
 
     // Send Ping
-    final request = {'source': 'localtcp_req', 'messageId': messageId, 'action': 'CHECK_BRIDGE'};
+    final request = {
+      'source': 'localtcp_req',
+      'messageId': messageId,
+      'action': 'CHECK_BRIDGE',
+    };
 
     html.window.postMessage(request, '*');
 
@@ -77,11 +85,18 @@ class LocalTcpExtensionNotifier extends Notifier<LocalTcpExtensionStatus> {
   String get extensionUrl =>
       'https://chromewebstore.google.com/detail/local-tcp/ngbakchodnmhndnghhejmocfadjfekkf';
 
-  String get githubUrl => 'https://github.com/algonize/local_tcp/archive/refs/heads/main.zip';
+  String get githubUrl =>
+      'https://github.com/algonize/local_tcp/archive/refs/heads/main.zip';
   String get youtubeUrl => 'https://www.youtube.com/watch?v=D0Zdp7xysy8';
 }
 
-enum LocalTcpExtensionStatus { checking, notInstalled, bridgeNotLinked, ready, notWeb }
+enum LocalTcpExtensionStatus {
+  checking,
+  notInstalled,
+  bridgeNotLinked,
+  ready,
+  notWeb,
+}
 
 extension LocalTcpExtensionStatusX on LocalTcpExtensionStatus {
   bool get isChecking => this == LocalTcpExtensionStatus.checking;

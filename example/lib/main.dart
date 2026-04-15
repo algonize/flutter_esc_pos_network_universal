@@ -35,11 +35,15 @@ class HomePage extends StatelessWidget {
           children: [
             ExtensionWarningTile(),
             ElevatedButton.icon(
-              onPressed: () async => await NetworkPrinter().printWidgetTicket(context),
+              onPressed: () async =>
+                  await NetworkPrinter().printWidgetTicket(context),
               icon: const Icon(Icons.print),
               label: const Text('Test Print'),
               style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 32,
+                  vertical: 16,
+                ),
               ),
             ),
           ],

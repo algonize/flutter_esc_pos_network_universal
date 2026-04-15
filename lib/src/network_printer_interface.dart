@@ -11,6 +11,8 @@ abstract class BasePrinterNetworkManager {
 
   Future<PosPrintResult> connect({Duration? timeout});
   Future<PosPrintResult> disconnect({Duration? timeout});
-  Future<PosPrintResult> printTicket(List<int> data, {bool isDisconnect = true});
-  Future<PosPrintResult> printWidget(BuildContext context, {required Widget child, bool isDisconnect = true});
+  Future<PosPrintResult> printTicket(List<int> data,
+      {bool isDisconnect = true});
+  Future<PosPrintResult> printWidget(BuildContext context,
+      {required Widget child, bool isDisconnect = true});
 }

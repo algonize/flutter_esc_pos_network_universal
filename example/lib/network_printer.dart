@@ -14,17 +14,29 @@ class NetworkPrinter {
       'Special 1: àÀ èÈ éÉ ûÛ üÜ çÇ ôÔ',
       styles: const PosStyles(codeTable: 'CP1252'),
     );
-    bytes += generator.text('Special 2: blåbærgrød', styles: const PosStyles(codeTable: 'CP1252'));
+    bytes += generator.text(
+      'Special 2: blåbærgrød',
+      styles: const PosStyles(codeTable: 'CP1252'),
+    );
 
     bytes += generator.text('Bold text', styles: const PosStyles(bold: true));
-    bytes += generator.text('Reverse text', styles: const PosStyles(reverse: true));
+    bytes += generator.text(
+      'Reverse text',
+      styles: const PosStyles(reverse: true),
+    );
     bytes += generator.text(
       'Underlined text',
       styles: const PosStyles(underline: true),
       linesAfter: 1,
     );
-    bytes += generator.text('Align left', styles: const PosStyles(align: PosAlign.left));
-    bytes += generator.text('Align center', styles: const PosStyles(align: PosAlign.center));
+    bytes += generator.text(
+      'Align left',
+      styles: const PosStyles(align: PosAlign.left),
+    );
+    bytes += generator.text(
+      'Align center',
+      styles: const PosStyles(align: PosAlign.center),
+    );
     bytes += generator.text(
       'Align right',
       styles: const PosStyles(align: PosAlign.right),
@@ -51,7 +63,10 @@ class NetworkPrinter {
 
     bytes += generator.text(
       'Text size 200%',
-      styles: const PosStyles(height: PosTextSize.size2, width: PosTextSize.size2),
+      styles: const PosStyles(
+        height: PosTextSize.size2,
+        width: PosTextSize.size2,
+      ),
     );
 
     // Print barcode
