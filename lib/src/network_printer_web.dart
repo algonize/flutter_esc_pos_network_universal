@@ -17,7 +17,6 @@ class PrinterNetworkManagerWeb implements BasePrinterNetworkManager {
   final int _port;
   final Duration _timeout;
   final ThermalPosPrinterPageSize _paperSize;
-  final int _chunkHeight;
   CapabilityProfile? _profile;
 
   bool _isConnected = false;
@@ -32,13 +31,11 @@ class PrinterNetworkManagerWeb implements BasePrinterNetworkManager {
     Duration timeout = const Duration(seconds: 5),
     ThermalPosPrinterPageSize paperSize = ThermalPosPrinterPageSize.size80mm,
     CapabilityProfile? profile,
-    int chunkHeight = 100,
   })  : _host = host,
         _port = port,
         _timeout = timeout,
         _paperSize = paperSize,
-        _profile = profile,
-        _chunkHeight = chunkHeight {
+        _profile = profile {
     _initListener();
   }
 
@@ -65,9 +62,6 @@ class PrinterNetworkManagerWeb implements BasePrinterNetworkManager {
 
   @override
   CapabilityProfile? get profile => _profile;
-
-  @override
-  int get chunkHeight => _chunkHeight;
 
   Future<Map<String, dynamic>> _sendMessage(String action,
       {List<int>? data}) async {
@@ -152,7 +146,7 @@ class PrinterNetworkManagerWeb implements BasePrinterNetworkManager {
       final imageBytes = await screenshotController.captureFromLongWidget(
         InheritedTheme.captureAll(
             context, Material(color: Colors.white, child: child)),
-        delay: const Duration(milliseconds: 200),
+        delay: const Duration(milliseconds: 500),
         context: context,
       );
 
@@ -162,17 +156,17 @@ class PrinterNetworkManagerWeb implements BasePrinterNetworkManager {
       final generator = Generator(_paperSize.toPaperSize, _profile!);
       List<int> bytes = [];
 
-      int yOffset = 0;
-
-      while (yOffset < baseImage.height) {
-        int h = (yOffset + _chunkHeight > baseImage.height)
-            ? baseImage.height - yOffset
-            : _chunkHeight;
-        final img.Image cropped = img.copyCrop(baseImage,
-            x: 0, y: yOffset, width: baseImage.width, height: h);
-        bytes.addAll(generator.image(cropped));
-        yOffset += h;
-      }
+      // Send the entire image as ONE ESC/POS GS v 0 command.
+      //
+      // The previous chunked approach (splitting into _chunkHeight slices and
+      // calling generator.image() per slice) caused the printer to advance one
+      // minimum dot-line between consecutive image commands. This produced
+      // white gaps exactly at chunk boundaries and a "doubled" appearance for
+      // text lines that straddled a boundary.
+      //
+      // A single generator.image() call for the full bitmap is seamless.
+      // Typical receipt bitmaps (≤576×1500 px) are well within browser RAM.
+      bytes.addAll(generator.image(baseImage));
 
       bytes.addAll(generator.feed(2));
       bytes.addAll(generator.cut());
@@ -194,7 +188,6 @@ BasePrinterNetworkManager createPrinterManager(
   Duration timeout,
   ThermalPosPrinterPageSize paperSize,
   CapabilityProfile? profile,
-  int chunkHeight,
 ) =>
     PrinterNetworkManagerWeb(
       host,
@@ -202,5 +195,4 @@ BasePrinterNetworkManager createPrinterManager(
       timeout: timeout,
       paperSize: paperSize,
       profile: profile,
-      chunkHeight: chunkHeight,
     );

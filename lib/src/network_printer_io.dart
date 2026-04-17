@@ -48,9 +48,6 @@ class PrinterNetworkManagerIO implements BasePrinterNetworkManager {
   CapabilityProfile? get profile => _profile;
 
   @override
-  int get chunkHeight => _chunkHeight;
-
-  @override
   Future<PosPrintResult> connect({Duration? timeout}) async {
     if (_socket != null) {
       await _closeSocket();
@@ -235,7 +232,6 @@ BasePrinterNetworkManager createPrinterManager(
   Duration timeout,
   ThermalPosPrinterPageSize paperSize,
   CapabilityProfile? profile,
-  int chunkHeight,
 ) =>
     PrinterNetworkManagerIO(
       host,
@@ -243,5 +239,4 @@ BasePrinterNetworkManager createPrinterManager(
       timeout: timeout,
       paperSize: paperSize,
       profile: profile,
-      chunkHeight: chunkHeight,
     );

@@ -1,7 +1,7 @@
 name: flutter_esc_pos_network_universal
 description: The library allows printing receipts using ESC/POS commands using
   thermal Wi-Fi/Ethernet printer.
-version: 1.0.0
+version: 1.0.1
 homepage: https://github.com/algonize/flutter_esc_pos_network_universal
 
 environment:

@@ -7,7 +7,6 @@ abstract class BasePrinterNetworkManager {
   bool get isConnected;
   ThermalPosPrinterPageSize get paperSize;
   CapabilityProfile? get profile;
-  int get chunkHeight;
 
   Future<PosPrintResult> connect({Duration? timeout});
   Future<PosPrintResult> disconnect({Duration? timeout});
