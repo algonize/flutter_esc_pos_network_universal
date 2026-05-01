@@ -54,8 +54,7 @@ class PrinterNetworkManagerIO implements BasePrinterNetworkManager {
     }
 
     try {
-      _socket =
-          await Socket.connect(_host, _port, timeout: timeout ?? _timeout);
+      _socket = await Socket.connect(_host, _port, timeout: timeout ?? _timeout);
       _isConnected = true;
       _profile ??= await CapabilityProfile.load();
       return PosPrintResult.success;
@@ -74,8 +73,7 @@ class PrinterNetworkManagerIO implements BasePrinterNetworkManager {
   }
 
   @override
-  Future<PosPrintResult> printTicket(List<int> data,
-      {bool isDisconnect = true}) async {
+  Future<PosPrintResult> printTicket(List<int> data, {bool isDisconnect = true}) async {
     if (_isPrinting) {
       return PosPrintResult.printInProgress;
     }
@@ -94,7 +92,23 @@ class PrinterNetworkManagerIO implements BasePrinterNetworkManager {
         }
       }
 
-      _socket!.add(data);
+      // ── Transmission-level Chunking ─────────────────────────────────────────
+      // We send the raw bytes in smaller chunks to ensure the printer's input
+      // buffer doesn't overflow.
+      const int chunkSize = 5000;
+      int offset = 0;
+
+      while (offset < data.length) {
+        int end = offset + chunkSize;
+        if (end > data.length) end = data.length;
+
+        _socket!.add(data.sublist(offset, end));
+        await _socket!.flush();
+
+        offset = end;
+        // Small breathing room for the printer's processor
+        await Future.delayed(const Duration(milliseconds: 20));
+      }
 
       if (isDisconnect) {
         final disconnectResult = await disconnect();
@@ -134,10 +148,8 @@ class PrinterNetworkManagerIO implements BasePrinterNetworkManager {
 
       final ScreenshotController screenshotController = ScreenshotController();
 
-      final Uint8List imageBytes =
-          await screenshotController.captureFromLongWidget(
-        InheritedTheme.captureAll(
-            context, Material(color: Colors.white, child: child)),
+      final Uint8List imageBytes = await screenshotController.captureFromLongWidget(
+        InheritedTheme.captureAll(context, Material(color: Colors.white, child: child)),
         delay: const Duration(milliseconds: 200),
         context: context,
       );
@@ -170,23 +182,8 @@ class PrinterNetworkManagerIO implements BasePrinterNetworkManager {
       final generator = Generator(paperSize.toPaperSize, profile);
       List<int> bytes = [];
 
-      int yOffset = 0;
-      while (yOffset < baseImage.height) {
-        int h = (yOffset + chunkHeight > baseImage.height)
-            ? baseImage.height - yOffset
-            : chunkHeight;
-
-        final img.Image cropped = img.copyCrop(
-          baseImage,
-          x: 0,
-          y: yOffset,
-          width: baseImage.width,
-          height: h,
-        );
-
-        bytes.addAll(generator.image(cropped));
-        yOffset += h;
-      }
+      // Send the entire image as ONE ESC/POS command to avoid gaps between chunks.
+      bytes.addAll(generator.image(baseImage));
 
       bytes.addAll(generator.feed(2));
       bytes.addAll(generator.cut());

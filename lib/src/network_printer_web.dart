@@ -114,15 +114,36 @@ class PrinterNetworkManagerWeb implements BasePrinterNetworkManager {
 
     _isPrinting = true;
     try {
-      final res = await _sendMessage('SEND', data: data);
-      _isPrinting = false;
+      // ── Transmission-level Chunking ─────────────────────────────────────────
+      // We send the raw bytes in smaller chunks to ensure the printer's input
+      // buffer doesn't overflow and to stay safely within Chrome's Native
+      // Messaging size limits (1MB).
+      //
+      // Note: This is different from "Image Chunking". We are still sending
+      // one large ESC/POS command, but delivering its bytes in slices.
+      const int chunkSize = 5000;
+      int offset = 0;
 
-      if (res['success'] == true) {
-        if (isDisconnect) await disconnect();
-        return PosPrintResult.success;
-      } else {
-        return PosPrintResult.socketError;
+      while (offset < data.length) {
+        int end = offset + chunkSize;
+        if (end > data.length) end = data.length;
+
+        final chunk = data.sublist(offset, end);
+        final res = await _sendMessage('SEND', data: chunk);
+
+        if (res['success'] != true) {
+          _isPrinting = false;
+          return PosPrintResult.socketError;
+        }
+
+        offset = end;
+        // Small breathing room for the printer's processor
+        await Future.delayed(const Duration(milliseconds: 20));
       }
+
+      _isPrinting = false;
+      if (isDisconnect) await disconnect();
+      return PosPrintResult.success;
     } catch (e) {
       _isPrinting = false;
       return PosPrintResult.socketError;
