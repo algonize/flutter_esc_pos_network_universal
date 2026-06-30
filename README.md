@@ -103,6 +103,9 @@ The widget is rasterized and sent as a single ESC/POS image — ideal for logos,
 
 ## 🌐 Web setup
 
+> ### 🎬 New here? **[▶️ Watch the 2‑minute setup video](https://youtu.be/oY2_5x2MoEk?si=hJQcWfsiVZ6btSXQ)**
+> The fastest way to get the web bridge working — follow along step by step.
+
 On the web, the end user installs the **Local TCP** extension once; it ships a tiny native messaging host that owns the actual TCP socket.
 
 1. **Install the extension** from the [Chrome Web Store](https://chromewebstore.google.com/detail/local-tcp/ngbakchodnmhndnghhejmocfadjfekkf) (works on Chrome, Edge, Chromium, and Brave).
@@ -112,7 +115,7 @@ On the web, the end user installs the **Local TCP** extension once; it ships a t
    - 🐧 **Linux** — run the `.run` installer.
 3. **Restart the browser.** The popup shows **Bridge Linked** when ready.
 
-No files are copied by hand and no terminal is needed. Source, installers, and a setup video live in the extension repo: **[github.com/algonize/local_tcp](https://github.com/algonize/local_tcp)** · **[Setup video](https://www.youtube.com/watch?v=D0Zdp7xysy8)**.
+No files are copied by hand and no terminal is needed. Source, installers, and the setup video live in the extension repo: **[github.com/algonize/local_tcp](https://github.com/algonize/local_tcp)**.
 
 ### Detect the bridge before printing (recommended)
 

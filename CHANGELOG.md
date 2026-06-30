@@ -1,3 +1,7 @@
+# 1.0.4
+
+- **Docs**: Updated the demo YouTube video link in the README.
+
 # 1.0.3
 
 - **Fix: Garbled receipts on physical iOS devices** — On real iPhones/iPads, `printWidget` receipts printed as random characters instead of the rendered image, while the iOS Simulator, Android and Web worked correctly. Root cause (confirmed on-device): real iOS renders/captures the widget through Impeller and can produce a **16-bit-per-channel bitmap** (`Format.uint16`) for wide-gamut/HDR displays; the Simulator, Android and Web produce ordinary 8-bit (`Format.uint8`) bitmaps. `flutter_esc_pos_utils` packs pixels into the ESC/POS bit-image **assuming 8 bits per pixel**, so a 16-bit bitmap yields double-length, bit-misaligned raster strips. Each strip's declared height stops matching its data, the `ESC *` command **desynchronizes**, and the printer drops out of graphics mode and prints the raster bytes as text.
