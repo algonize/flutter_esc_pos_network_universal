@@ -174,10 +174,38 @@ class PrinterNetworkManagerIO implements BasePrinterNetworkManager {
       final Uint8List imageBytes = params['imageBytes'];
       final ThermalPosPrinterPageSize paperSize = params['paperSize'];
       final CapabilityProfile profile = params['profile'];
-      final int chunkHeight = params['chunkHeight'];
 
-      final img.Image? baseImage = img.decodeImage(imageBytes);
-      if (baseImage == null) return [];
+      final img.Image? decoded = img.decodeImage(imageBytes);
+      if (decoded == null) return [];
+
+      // ── Normalize the bitmap to 8-bit (THE iOS fix) ─────────────────────────
+      // Real iOS devices render/capture the widget through Impeller and can
+      // produce a 16-bit-per-channel bitmap (Format.uint16) for wide-gamut/HDR
+      // displays. The iOS Simulator, Android and Web produce ordinary 8-bit
+      // (Format.uint8) bitmaps.
+      //
+      // flutter_esc_pos_utils packs pixels into the ESC/POS bit-image assuming
+      // 8 bits per pixel. Given a 16-bit image, `getBytes()` returns TWO bytes
+      // per pixel, so every raster strip's data comes out double-length and
+      // bit-misaligned. The strip's declared height no longer matches its data,
+      // the `ESC *` command desynchronizes, and the printer falls out of
+      // graphics mode and prints the raster bytes as random characters — the
+      // garbled receipts seen only on physical iPhones/iPads.
+      //
+      // Forcing the bitmap to 8 bits per channel makes the data match what the
+      // encoder expects, identically across every platform.
+      img.Image normalized = decoded;
+      if (normalized.format != img.Format.uint8) {
+        normalized = normalized.convert(format: img.Format.uint8);
+      }
+
+      // Defensive: also keep the bitmap within the print-head width (576 / 512 /
+      // 384 px). Over-wide bitmaps desync the same command in a different way.
+      // Only downscales when wider, so correctly-sized output is untouched.
+      final int maxWidth = paperSize.widthPx.toInt();
+      final img.Image baseImage = normalized.width > maxWidth
+          ? img.copyResize(normalized, width: maxWidth)
+          : normalized;
 
       final generator = Generator(paperSize.toPaperSize, profile);
       List<int> bytes = [];

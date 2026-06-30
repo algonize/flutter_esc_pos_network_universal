@@ -171,8 +171,19 @@ class PrinterNetworkManagerWeb implements BasePrinterNetworkManager {
         context: context,
       );
 
-      final img.Image? baseImage = img.decodeImage(imageBytes);
-      if (baseImage == null) return PosPrintResult.ticketEmpty;
+      final img.Image? decoded = img.decodeImage(imageBytes);
+      if (decoded == null) return PosPrintResult.ticketEmpty;
+
+      // Normalize to 8 bits per channel before encoding. The ESC/POS encoder in
+      // flutter_esc_pos_utils packs pixels assuming 8 bits per pixel; a 16-bit
+      // (Format.uint16) bitmap would yield double-length, bit-misaligned raster
+      // data and desync the print command (the bug seen on physical iOS).
+      // Browsers/CanvasKit currently produce 8-bit, but this keeps the encoder
+      // input correct regardless of the renderer.
+      img.Image baseImage = decoded;
+      if (baseImage.format != img.Format.uint8) {
+        baseImage = baseImage.convert(format: img.Format.uint8);
+      }
 
       final generator = Generator(_paperSize.toPaperSize, _profile!);
       List<int> bytes = [];
