@@ -1,3 +1,7 @@
+# 1.0.5
+
+- **Docs**: Corrected the Local TCP extension repository link (`algonize/local_tcp` → `algoramming/local_tcp`) in the README and example app.
+
 # 1.0.4
 
 - **Docs**: Updated the demo YouTube video link in the README.

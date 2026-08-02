@@ -115,7 +115,7 @@ On the web, the end user installs the **Local TCP** extension once; it ships a t
    - 🐧 **Linux** — run the `.run` installer.
 3. **Restart the browser.** The popup shows **Bridge Linked** when ready.
 
-No files are copied by hand and no terminal is needed. Source, installers, and the setup video live in the extension repo: **[github.com/algonize/local_tcp](https://github.com/algonize/local_tcp)**.
+No files are copied by hand and no terminal is needed. Source, installers, and the setup video live in the extension repo: **[github.com/algoramming/local_tcp](https://github.com/algoramming/local_tcp)**.
 
 ### Detect the bridge before printing (recommended)
 
